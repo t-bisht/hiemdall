@@ -1,0 +1,91 @@
+// hiemdall — centralised authentication + authorization server.
+// Single-project Gradle build. Java 21, Spring Boot 3.
+// Versions live in gradle/libs.versions.toml.
+
+plugins {
+    id 'java'
+    id 'jacoco'
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.spring.dependency.mgmt)
+    alias(libs.plugins.spotless)
+}
+
+group   = 'org.tb.hiemdall'
+version = '0.1.0-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+        '-parameters',
+        '-Xlint:all',
+        '-Xlint:-processing',
+    ]
+    options.encoding = 'UTF-8'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.testcontainers:testcontainers-bom:${libs.versions.testcontainers.get()}")
+    }
+}
+
+dependencies {
+    implementation libs.spring.boot.starter.web
+    implementation libs.spring.boot.starter.actuator
+    implementation libs.spring.boot.starter.security
+    implementation libs.spring.boot.starter.validation
+
+    implementation libs.jjwt.api
+    runtimeOnly    libs.jjwt.impl
+    runtimeOnly    libs.jjwt.jackson
+
+    annotationProcessor libs.spring.boot.configuration.processor
+    compileOnly         libs.lombok
+    annotationProcessor libs.lombok
+    testCompileOnly     libs.lombok
+    testAnnotationProcessor libs.lombok
+
+    testImplementation libs.bundles.testing.spring
+    testRuntimeOnly    'org.junit.platform:junit-platform-launcher'
+}
+
+spotless {
+    java {
+        googleJavaFormat('1.22.0').aosp()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+jacoco {
+    toolVersion = '0.8.12'
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required  = true
+        html.required = true
+    }
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    jvmArgs '-XX:+EnableDynamicAgentLoading'
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat = 'full'
+    }
+}
+
+tasks.register('format') {
+    group       = 'verification'
+    description = 'Apply Spotless formatting'
+    dependsOn tasks.named('spotlessApply')
+}
