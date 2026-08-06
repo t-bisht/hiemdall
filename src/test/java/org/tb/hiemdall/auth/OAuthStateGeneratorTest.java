@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
+import org.tb.hiemdall.auth.utilities.OAuthStateGenerator;
 
 class OAuthStateGeneratorTest {
 

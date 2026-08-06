@@ -1,0 +1,6 @@
+== Sequence Diagram
+
+
+== Google setup
+
+* Create a GCP project *

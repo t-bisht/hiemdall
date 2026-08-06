@@ -32,8 +32,7 @@ import org.tb.hiemdall.auth.gcp.services.GoogleAuthStartService;
  *       SPA can echo it back on unsafe methods like logout)
  * </ul>
  */
-@RestController
-@RequestMapping("/api/auth")
+
 public class GoogleAuthController {
 
     private static final Logger log = LoggerFactory.getLogger(GoogleAuthController.class);
@@ -42,8 +41,7 @@ public class GoogleAuthController {
     private final GoogleAuthStartService authStartService;
 
     public GoogleAuthController(
-            GoogleAuthCallbackService authCallBackService,
-            GoogleAuthStartService authStartService) {
+            ) {
 
         this.authCallBackService = authCallBackService;
         this.authStartService = authStartService;
@@ -55,12 +53,7 @@ public class GoogleAuthController {
      * Kicks off Google OAuth. Generates a fresh CSRF state, builds Google's authorization URL, sets
      * two short-lived cookies, returns a 302 to Google.
      */
-    @GetMapping("/google/start")
-    public ResponseEntity<Void> startGoogleLogin(
-            @RequestParam(name = "redirect", required = false) String redirect) {
 
-        return authStartService.startGoogleAuthService(redirect);
-    }
 
     // ─── §4.2 — /google/callback (happy path) ──────────────────────────────
 

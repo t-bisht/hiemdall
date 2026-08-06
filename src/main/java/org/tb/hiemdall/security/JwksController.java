@@ -1,4 +1,4 @@
-package org.tb.hiemdall.web;
+package org.tb.hiemdall.security;
 
 import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
@@ -9,7 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.tb.hiemdall.security.RsaKeyProvider;
 
 /**
  * Publishes {@code auth_engine}'s public signing key(s) as a JWK Set (RFC 7517) so sub-engines can

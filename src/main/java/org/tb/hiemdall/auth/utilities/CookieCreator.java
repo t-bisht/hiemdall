@@ -1,4 +1,4 @@
-package org.tb.hiemdall.auth.gcp.services;
+package org.tb.hiemdall.auth.utilities;
 
 import static org.tb.hiemdall.auth.gcp.GCPAuthConstants.*;
 

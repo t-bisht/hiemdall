@@ -1,0 +1,79 @@
+= Standalone authentication server - Design
+
+== Why ?
+
+- Abstract login and authentication to a single engine
+- Reuse this engine for multiple applications
+
+[plantuml]
+----
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+
+System(s1,'Application 1','Multi service application for usecase1')
+System(s2,'Application 2','Multi service application for usecase2')
+
+System_Boundary(hiem,'Hiemdall'){
+    Component(orca,'Routing orchestrator','Centralized controller to route request')
+    Container_Boundary(fa,'Federated Authorization'){
+        Component(gcp,'Google authenticator', 'OAuth 2.0 based federated authentication with google')
+    }
+
+    Container_Boundary(ref,'Token Refresh'){
+           Component(gcpref,'Google token refresher', 'Refresh google based tokens')
+    }
+
+    Component(jwt,'JWT Token Provider','Construct and refresh JWT token')
+
+    Rel_D(orca, ref,'route:refresh token')
+    Rel_D(orca, fa,'route:federation login')
+    Rel_D(orca, jwt,'route:jwt token creation')
+
+    Rel_D(s1,orca,'auth related requests')
+    Rel_D(s2,orca,'auth related requests')
+}
+
+@enduml
+----
+
+== Google authentication
+
+=== Entities require by Hiemdall
+
+|===
+| Entity | Description
+| APP_OAUTH_REDIRECT_URI | To be registered with google OAUTH (for callback post authentication)
+| GOOGLE_CLIENT_ID | Google project client ID (for version 1 keeping this common for all project)
+| GOOGLE_CLIENT_SECRET | Client secret (for version 1 keeping this common for all project - In future would be application centric)
+|===
+
+=== Sequence diagram for Application calling for google authentication
+
+[plantuml]
+----
+@startuml
+
+participant application_ui as ui
+participant heimdall as h
+participant google as g
+participant application_backend as ab
+
+ui -> h : initiate login via google
+
+h -> h : validate,generate_url,CSRF
+
+h -> ui : redirection_url, CSRF
+
+
+@enduml
+----
+
+
+== JWT Token Generation
+
+=== Key Generation
+
+* Both public and private key should be generated at startup
+* Design to be thought to save the key so that restart should not change the keys

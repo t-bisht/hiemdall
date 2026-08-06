@@ -17,13 +17,7 @@ app:
       - email
       - profile
       - https://www.googleapis.com/auth/gmail.readonly
-  oauth:
-    post-login:
-      default-path: /dashboard
-      allowed-paths:
-        - /dashboard
-        - /expenses
-        - /settings
+
   jwt:
     private-key-path: ${APP_JWT_PRIVATE_KEY_PATH:/Users/obake/codebase/kharchakhata/infra/secrets/jwt-private.pem}
     active-kid:       ${APP_JWT_ACTIVE_KID:v1}

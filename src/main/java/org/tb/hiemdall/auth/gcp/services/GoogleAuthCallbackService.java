@@ -15,7 +15,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.tb.hiemdall.auth.OAuthStateGenerator;
+import org.tb.hiemdall.auth.utilities.CookieCreator;
+import org.tb.hiemdall.auth.utilities.OAuthStateGenerator;
 import org.tb.hiemdall.auth.exception.CsrfMismatchException;
 import org.tb.hiemdall.auth.exception.LoginCancelledException;
 import org.tb.hiemdall.auth.gcp.GoogleOAuthClient;
@@ -39,7 +40,8 @@ public class GoogleAuthCallbackService {
 
     @Autowired RedirectionResolver redirectionResolver;
 
-    @Autowired CookieCreator cookieCreator;
+    @Autowired
+    CookieCreator cookieCreator;
 
     public ResponseEntity<Void> handleCallback(
             String error, String state, String stateCookie, String code, String postLoginCookie) {

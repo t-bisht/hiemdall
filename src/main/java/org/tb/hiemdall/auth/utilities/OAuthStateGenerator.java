@@ -1,4 +1,4 @@
-package org.tb.hiemdall.auth;
+package org.tb.hiemdall.auth.utilities;
 
 import java.security.SecureRandom;
 import java.util.Base64;
