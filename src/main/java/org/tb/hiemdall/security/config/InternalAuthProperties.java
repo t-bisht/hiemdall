@@ -1,4 +1,4 @@
-package org.tb.hiemdall.auth.config;
+package org.tb.hiemdall.security.config;
 
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;

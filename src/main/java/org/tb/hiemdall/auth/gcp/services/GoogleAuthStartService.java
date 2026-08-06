@@ -1,51 +1,44 @@
 package org.tb.hiemdall.auth.gcp.services;
 
-import static org.tb.hiemdall.auth.gcp.GCPAuthConstants.*;
-
-import java.net.URI;
-import java.util.Map;
-
 import jakarta.annotation.Resource;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.tb.hiemdall.auth.config.GoogleOAuthProperties;
+import org.tb.hiemdall.auth.exception.AuthInitializationException;
+import org.tb.hiemdall.auth.gcp.configs.GoogleOAuthProperties;
 import org.tb.hiemdall.auth.records.InitAuthRecord;
-import org.tb.hiemdall.auth.utilities.CookieCreator;
 import org.tb.hiemdall.auth.utilities.OAuthStateGenerator;
 import org.tb.hiemdall.spring.RegisteredAppsConfig;
 
 @Service
 public class GoogleAuthStartService {
 
+    private static final Logger log = LoggerFactory.getLogger(GoogleAuthStartService.class);
 
-    @Autowired
-    OAuthStateGenerator stateGenerator;
-
-    @Autowired
-    CookieCreator cookieCreator;
+    @Autowired OAuthStateGenerator stateGenerator;
 
     @Resource
     @Qualifier("appRegister")
     Map<String, RegisteredAppsConfig.RegisteredApp> appRegister;
 
-
-    @Resource
-    GoogleOAuthProperties props;
-
+    @Resource GoogleOAuthProperties props;
 
     public InitAuthRecord createAuthInitializationRecord(String appID) {
-        String postAuthRedirectURL = appRegister.get(appID).postAuthRedirect();
-        String csrfToken = stateGenerator.generate();
-        String authUrl = buildGoogleAuthURL(csrfToken, /* forceConsent= */ true);
-        return new InitAuthRecord(csrfToken, authUrl, postAuthRedirectURL);
+        try {
+            String postAuthRedirectURL = appRegister.get(appID).postAuthRedirect();
+            String csrfToken = stateGenerator.generate();
+            String authUrl = buildGoogleAuthURL(csrfToken, /* forceConsent= */ true);
+            return new InitAuthRecord(csrfToken, authUrl, postAuthRedirectURL);
+        } catch (Exception e) {
+            log.error("auth init failed for appID '{}': {}", appID, e.getMessage(), e);
+            throw new AuthInitializationException(
+                    "something went wrong initializing authentication", e);
+        }
     }
-
 
     public String buildGoogleAuthURL(String csrfToken, boolean forceConsent) {
         UriComponentsBuilder b =
@@ -62,18 +55,4 @@ public class GoogleAuthStartService {
         }
         return b.encode().build().toUriString();
     }
-
-//    public ResponseEntity<Void> startGoogleAuthService(String redirect) {
-//
-//
-//        ResponseCookie stateCookie = cookieCreator.shortLivedOauthCookie(STATE_COOKIE, state);
-//        ResponseCookie postLoginCookie =
-//                cookieCreator.shortLivedOauthCookie(POST_LOGIN_COOKIE, resolvedRedirect);
-//
-//        return ResponseEntity.status(HttpStatus.FOUND)
-//                .location(URI.create(authUrl))
-//                .header(HttpHeaders.SET_COOKIE, stateCookie.toString())
-//                .header(HttpHeaders.SET_COOKIE, postLoginCookie.toString())
-//                .build();
-//    }
 }

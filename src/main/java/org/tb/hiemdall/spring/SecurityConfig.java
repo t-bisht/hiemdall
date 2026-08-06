@@ -1,4 +1,4 @@
-package org.tb.hiemdall.security.config;
+package org.tb.hiemdall.spring;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,7 +33,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         auth ->
                                 auth.requestMatchers(
-                                                "/api/auth/**",
+                                                "/auth/**",
                                                 "/.well-known/**",
                                                 "/api/actuator/**",
                                                 "/internal/**")

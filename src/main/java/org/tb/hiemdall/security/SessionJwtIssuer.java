@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import org.springframework.stereotype.Component;
-import org.tb.hiemdall.auth.gcp.dto.IdentityClaims;
+import org.tb.hiemdall.auth.records.IdentityClaims;
 import org.tb.hiemdall.security.config.JwtProperties;
 
 /**

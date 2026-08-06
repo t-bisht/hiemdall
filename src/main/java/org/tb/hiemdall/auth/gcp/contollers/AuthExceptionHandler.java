@@ -39,7 +39,11 @@ public class AuthExceptionHandler {
 
     @ExceptionHandler(LoginCancelledException.class)
     ResponseEntity<Void> onCancelled(LoginCancelledException e) {
-        log.info("Login cancelled by user");
+        if ("access_denied".equals(e.errorCode())) {
+            log.info("Login cancelled by user");
+        } else {
+            log.warn("Google OAuth returned error [{}]", e.errorCode());
+        }
         return redirect(e);
     }
 

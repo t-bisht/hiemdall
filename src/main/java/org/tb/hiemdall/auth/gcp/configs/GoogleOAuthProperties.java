@@ -1,4 +1,4 @@
-package org.tb.hiemdall.auth.config;
+package org.tb.hiemdall.auth.gcp.configs;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;

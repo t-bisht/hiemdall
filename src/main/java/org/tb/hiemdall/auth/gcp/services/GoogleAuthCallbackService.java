@@ -1,105 +1,63 @@
 package org.tb.hiemdall.auth.gcp.services;
 
-import static org.tb.hiemdall.auth.gcp.GCPAuthConstants.POST_LOGIN_COOKIE;
-import static org.tb.hiemdall.auth.gcp.GCPAuthConstants.STATE_COOKIE;
-
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.Arrays;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.tb.hiemdall.auth.exception.LoginCancelledException;
+import org.tb.hiemdall.auth.gcp.clients.GoogleTokenExchangeClient;
+import org.tb.hiemdall.auth.identity.IdentityResolver;
+import org.tb.hiemdall.auth.records.AuthCallBackRecord;
+import org.tb.hiemdall.auth.records.HiemdallAuthResponseRecord;
+import org.tb.hiemdall.auth.records.IdentityClaims;
+import org.tb.hiemdall.auth.records.OAuthTokenResponse;
+import org.tb.hiemdall.auth.utilities.CSRFStateMatchUtility;
 import org.tb.hiemdall.auth.utilities.CookieCreator;
 import org.tb.hiemdall.auth.utilities.OAuthStateGenerator;
-import org.tb.hiemdall.auth.exception.CsrfMismatchException;
-import org.tb.hiemdall.auth.exception.LoginCancelledException;
-import org.tb.hiemdall.auth.gcp.GoogleOAuthClient;
-import org.tb.hiemdall.auth.gcp.IdTokenClaimsReader;
-import org.tb.hiemdall.auth.gcp.dto.GoogleTokenResponse;
-import org.tb.hiemdall.auth.gcp.dto.IdentityClaims;
-import org.tb.hiemdall.security.SessionJwtIssuer;
 
 @Service
 public class GoogleAuthCallbackService {
 
     private static final Logger log = LoggerFactory.getLogger(GoogleAuthCallbackService.class);
 
-    @Autowired GoogleOAuthClient googleClient;
+    @Autowired GoogleTokenExchangeClient googleClient;
 
-    @Autowired IdTokenClaimsReader idTokenReader;
-
-    @Autowired SessionJwtIssuer jwtIssuer;
+    @Autowired
+    @Qualifier("googleOIDC")
+    IdentityResolver identityResolver;
 
     @Autowired OAuthStateGenerator stateGenerator;
 
-    @Autowired RedirectionResolver redirectionResolver;
+    @Autowired CookieCreator cookieCreator;
 
-    @Autowired
-    CookieCreator cookieCreator;
+    public HiemdallAuthResponseRecord handleCallback(AuthCallBackRecord callbackRecord) {
 
-    public ResponseEntity<Void> handleCallback(
-            String error, String state, String stateCookie, String code, String postLoginCookie) {
+        String error = callbackRecord.error();
+        String state = callbackRecord.state();
+        String stateCookie = callbackRecord.stateCookie();
+        String code = callbackRecord.code();
+        String postLoginCookie = callbackRecord.postLoginCookie();
 
+        // rely on error to fail fast
         if (error != null && !error.isBlank()) {
-            // Spec §4.3 first branch — user pressed Cancel at Google.
-            throw new LoginCancelledException();
+            throw new LoginCancelledException(error);
         }
 
-        verifyCsrfState(state, stateCookie);
+        // match CSRF stateCookie comes from browser and state comes from google
+        CSRFStateMatchUtility.verifyCsrfState(state, stateCookie);
 
-        GoogleTokenResponse tokens = googleClient.exchangeCode(code);
-        IdentityClaims identity = idTokenReader.readClaims(tokens.idToken());
+        // Process: OAuth 2.0 Authorization Code Exchange (RFC 6749 §4.1.3). Also called
+        // "code-for-token exchange" or "token exchange step".
+        // Google generated code would be used to generate the OATUH token
+        OAuthTokenResponse tokens = googleClient.exchangeCode(code);
 
-        // TODO(user-engine): POST /internal/users/upsert-from-google when user_engine exists.
-        log.info(
-                "Would upsert user_engine identity for sub={} email={}",
-                identity.sub(),
-                identity.email());
+        // resolve provider tokens → provider-neutral identity (OIDC decodes id_token, non-OIDC hits
+        // userinfo)
+        IdentityClaims identity = identityResolver.resolve(tokens);
 
-        String sessionJwt = jwtIssuer.issue(identity, extractScopes(tokens.scope()));
         String csrfToken = stateGenerator.generate();
-        String redirectPath = redirectionResolver.resolveRedirect(postLoginCookie);
 
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create(redirectPath))
-                .header(HttpHeaders.SET_COOKIE, cookieCreator.sessionCookie(sessionJwt).toString())
-                .header(HttpHeaders.SET_COOKIE, cookieCreator.csrfCookie(csrfToken).toString())
-                .header(
-                        HttpHeaders.SET_COOKIE,
-                        cookieCreator.clearedOauthCookie(STATE_COOKIE).toString())
-                .header(
-                        HttpHeaders.SET_COOKIE,
-                        cookieCreator.clearedOauthCookie(POST_LOGIN_COOKIE).toString())
-                .build();
-    }
-
-    /**
-     * CSRF check for the OAuth callback — state param must match state cookie. Constant-time
-     * compare to avoid timing-based state exfiltration.
-     */
-    private static void verifyCsrfState(String stateParam, String stateCookie) {
-        if (stateParam == null || stateParam.isBlank()) {
-            throw new CsrfMismatchException("state query param missing");
-        }
-        if (stateCookie == null || stateCookie.isBlank()) {
-            throw new CsrfMismatchException("kk_oauth_state cookie missing");
-        }
-        if (!MessageDigest.isEqual(
-                stateParam.getBytes(StandardCharsets.UTF_8),
-                stateCookie.getBytes(StandardCharsets.UTF_8))) {
-            throw new CsrfMismatchException("state mismatch");
-        }
-    }
-
-    /** Splits the space-separated Google scope string into a list. */
-    private static List<String> extractScopes(String spaceSeparated) {
-        if (spaceSeparated == null || spaceSeparated.isBlank()) return List.of();
-        return Arrays.stream(spaceSeparated.trim().split("\\s+")).toList();
+        return new HiemdallAuthResponseRecord(tokens, identity, csrfToken, postLoginCookie);
     }
 }

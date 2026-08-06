@@ -1,36 +1,47 @@
-package org.tb.hiemdall.auth.gcp;
+package org.tb.hiemdall.auth.identity.oidc;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import org.springframework.stereotype.Component;
 import org.tb.hiemdall.auth.exception.EmailUnverifiedException;
 import org.tb.hiemdall.auth.exception.IdTokenMalformedException;
-import org.tb.hiemdall.auth.gcp.dto.IdentityClaims;
+import org.tb.hiemdall.auth.identity.IdentityResolver;
+import org.tb.hiemdall.auth.records.IdentityClaims;
+import org.tb.hiemdall.auth.records.OAuthTokenResponse;
 
 /**
- * Extracts identity claims from a Google {@code id_token}.
+ * OIDC-standard {@link IdentityResolver} — decodes an {@code id_token} JWT payload.
  *
  * <p>An {@code id_token} is a signed JWT with three base64url-encoded parts joined by dots: {@code
- * <header>.<payload>.<signature>}. This reader decodes only the payload and enforces {@code
+ * <header>.<payload>.<signature>}. This resolver decodes only the payload and enforces {@code
  * email_verified == true}.
  *
- * <p>Deliberately skips signature verification (spec Open Q #15, decided 2026-07-25): the token
- * arrived back-channel from Google over TLS during {@link GoogleOAuthClient#exchangeCode(String)} —
- * we didn't get it from the browser. Verifying its signature adds no security against a browser
- * MITM (the TLS channel already provides that) and would require fetching + caching Google's JWKS.
+ * <p>Compatible with any OIDC provider that emits standard OIDC Core §5.1 claims — Google, Okta,
+ * Auth0, Apple. Azure AD needs a dedicated resolver (does not emit {@code email_verified}, uses
+ * {@code preferred_username}/{@code upn} instead of {@code email} for personal accounts).
+ *
+ * <p>Deliberately skips signature verification: the token arrived back-channel over TLS during the
+ * server-side code exchange. Verifying its signature adds no security against a browser MITM (the
+ * TLS channel already provides that) and would require fetching + caching provider JWKS.
  *
  * <p>If we ever accept id_tokens from the browser (e.g. Google One-Tap on the SPA), reintroduce
- * RS256 verification against Google's JWKS.
+ * RS256 verification against the provider's JWKS.
  */
-@Component
-public class IdTokenClaimsReader {
+@Component("googleOIDC")
+public class GoogleOIDCIdentityResolver implements IdentityResolver {
 
     private final ObjectMapper mapper;
 
-    public IdTokenClaimsReader(ObjectMapper mapper) {
+    public GoogleOIDCIdentityResolver(ObjectMapper mapper) {
         this.mapper = mapper;
+    }
+
+    @Override
+    public IdentityClaims resolve(OAuthTokenResponse tokens) {
+        if (tokens.idToken() == null) {
+            throw new IdTokenMalformedException("token response missing id_token");
+        }
+        return readClaims(tokens.idToken());
     }
 
     /**
@@ -41,7 +52,7 @@ public class IdTokenClaimsReader {
      * @throws EmailUnverifiedException if the {@code email_verified} claim is false or missing
      */
     public IdentityClaims readClaims(String idToken) {
-        JsonNode payload = decodePayload(idToken);
+        JsonNode payload = IdentityResolver.decodePayload(mapper, idToken);
 
         if (!payload.path("email_verified").asBoolean(false)) {
             throw new EmailUnverifiedException("id_token email_verified is false or missing");
@@ -52,22 +63,6 @@ public class IdTokenClaimsReader {
                 requireText(payload, "email"),
                 payload.path("name").asText(""),
                 payload.path("picture").asText(""));
-    }
-
-    private JsonNode decodePayload(String idToken) {
-        String[] parts = idToken.split("\\.");
-        if (parts.length != 3) {
-            throw new IdTokenMalformedException(
-                    "id_token must have 3 dot-separated parts, got " + parts.length);
-        }
-        try {
-            byte[] payloadBytes = Base64.getUrlDecoder().decode(parts[1]);
-            return mapper.readTree(new String(payloadBytes, StandardCharsets.UTF_8));
-        } catch (IllegalArgumentException e) {
-            throw new IdTokenMalformedException("id_token payload is not valid base64url", e);
-        } catch (Exception e) {
-            throw new IdTokenMalformedException("id_token payload is not valid JSON", e);
-        }
     }
 
     private static String requireText(JsonNode node, String field) {

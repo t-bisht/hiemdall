@@ -1,23 +1,28 @@
 package org.tb.hiemdall.auth.gcp;
 
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.tb.hiemdall.auth.HiemdallAuthOrchestrator;
 import org.tb.hiemdall.auth.gcp.services.GoogleAuthCallbackService;
 import org.tb.hiemdall.auth.gcp.services.GoogleAuthStartService;
+import org.tb.hiemdall.auth.records.AuthCallBackRecord;
+import org.tb.hiemdall.auth.records.HiemdallAuthResponseRecord;
+import org.tb.hiemdall.auth.records.InitAuthRecord;
 
+@Service("gcpauthorca")
+public class GCPLoginOrchestrator implements HiemdallAuthOrchestrator {
 
-@Service
-public class GCPLoginOrchestrator {
-    @Autowired
-    GoogleAuthCallbackService authCallBackService;
-    @Autowired
-    GoogleAuthStartService authStartService;
+    @Resource GoogleAuthStartService googleAuthStartService;
 
+    @Resource GoogleAuthCallbackService authCallBackService;
 
-    public ResponseEntity<Void> initGoogleAuth(String redirect, String appCode) {
-
+    @Override
+    public InitAuthRecord initiateAuthProcess(String appID) {
+        return googleAuthStartService.createAuthInitializationRecord(appID);
     }
 
+    @Override
+    public HiemdallAuthResponseRecord handleAuthCallBack(AuthCallBackRecord callbackObj) {
+        return authCallBackService.handleCallback(callbackObj);
+    }
 }

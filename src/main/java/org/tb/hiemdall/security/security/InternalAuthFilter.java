@@ -13,11 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.tb.hiemdall.auth.config.InternalAuthProperties;
 import org.tb.hiemdall.auth.exception.InternalAuthInvalidException;
 import org.tb.hiemdall.auth.exception.InternalAuthMissingException;
 import org.tb.hiemdall.auth.exception.UserContextRequiredException;
 import org.tb.hiemdall.security.SessionJwtVerifier;
+import org.tb.hiemdall.security.config.InternalAuthProperties;
 
 /**
  * Filter for the {@code /internal/**} boundary — checks two authentication layers before the
