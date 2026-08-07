@@ -5,8 +5,6 @@ import static org.tb.hiemdall.auth.gcp.GCPAuthConstants.STATE_COOKIE;
 
 import jakarta.annotation.Resource;
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +20,7 @@ import org.tb.hiemdall.auth.records.AuthCallBackRecord;
 import org.tb.hiemdall.auth.records.HiemdallAuthResponseRecord;
 import org.tb.hiemdall.auth.records.InitAuthRecord;
 import org.tb.hiemdall.auth.utilities.CookieCreator;
-import org.tb.hiemdall.security.SessionJwtIssuer;
+import org.tb.hiemdall.spring.RegisteredAppsConfig.RegisteredApp;
 
 @Service
 public class GoogleAuthServices {
@@ -35,11 +33,9 @@ public class GoogleAuthServices {
 
     @Autowired CookieCreator cookieCreator;
 
-    @Autowired SessionJwtIssuer sessionJwtIssuer;
-
     @Resource
     @Qualifier("appRegister")
-    Map<String, String> appRegister;
+    Map<String, RegisteredApp> appRegister;
 
     public ResponseEntity<Map<String, String>> startGoogleAuthService(String appID) {
 
@@ -74,15 +70,10 @@ public class GoogleAuthServices {
         HiemdallAuthResponseRecord responseRecord =
                 authOrchestrator.handleAuthCallBack(callbackEntities);
 
-        List<String> scopes = parseScopes(responseRecord.tokens().scope());
-        String sessionJwt = sessionJwtIssuer.issue(responseRecord.identity(), scopes);
-        String csrfToken = responseRecord.csrfToken();
         String redirectPath = responseRecord.redirectPath();
 
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(redirectPath))
-                .header(HttpHeaders.SET_COOKIE, cookieCreator.sessionCookie(sessionJwt).toString())
-                .header(HttpHeaders.SET_COOKIE, cookieCreator.csrfCookie(csrfToken).toString())
                 .header(
                         HttpHeaders.SET_COOKIE,
                         cookieCreator.clearedOauthCookie(STATE_COOKIE).toString())
@@ -90,12 +81,5 @@ public class GoogleAuthServices {
                         HttpHeaders.SET_COOKIE,
                         cookieCreator.clearedOauthCookie(POST_LOGIN_COOKIE).toString())
                 .build();
-    }
-
-    private static List<String> parseScopes(String scope) {
-        if (scope == null || scope.isBlank()) {
-            return Collections.emptyList();
-        }
-        return List.of(scope.trim().split("\\s+"));
     }
 }

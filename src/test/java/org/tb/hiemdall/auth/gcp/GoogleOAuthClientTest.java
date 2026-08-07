@@ -50,9 +50,9 @@ class GoogleOAuthClientTest {
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(
                         withSuccess(
-                                        "{\"access_token\":\"new-at\",\"expires_in\":3600,"
-                                                + "\"token_type\":\"Bearer\"}",
-                                        MediaType.APPLICATION_JSON));
+                                "{\"access_token\":\"new-at\",\"expires_in\":3600,"
+                                        + "\"token_type\":\"Bearer\"}",
+                                MediaType.APPLICATION_JSON));
 
         OAuthTokenResponse resp = client.refresh("refresh-token");
 

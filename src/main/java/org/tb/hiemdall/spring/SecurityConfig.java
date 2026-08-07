@@ -13,14 +13,14 @@ import org.tb.hiemdall.security.security.InternalAuthFilter;
  * <p>Two boundaries:
  *
  * <ul>
- *   <li>{@code /api/auth/**}, {@code /.well-known/**}, {@code /api/actuator/**} — public
- *   <li>{@code /internal/**} — {@link InternalAuthFilter} enforces X-Internal-Auth + Bearer JWT
- *       BEFORE the request reaches Spring's authorize step
+ *   <li>{@code /auth/**}, {@code /api/actuator/**} — public
+ *   <li>{@code /internal/**} — {@link InternalAuthFilter} enforces X-Internal-Auth header BEFORE
+ *       the request reaches Spring's authorize step
  * </ul>
  *
- * <p>CSRF is disabled at the framework level — session cookies use SameSite=Lax + the OAuth flow
- * uses per-request state cookies; logout uses double-submit CSRF handled in the controller.
- * Sessions are stateless — JWTs live entirely in cookies.
+ * <p>CSRF is disabled at the framework level — the OAuth flow uses per-request state cookies with
+ * SameSite=Lax. Session JWT wiring was stripped for v1; identity-engine work will reintroduce it in
+ * v2.
  */
 @Configuration
 public class SecurityConfig {
@@ -32,11 +32,7 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
                         auth ->
-                                auth.requestMatchers(
-                                                "/auth/**",
-                                                "/.well-known/**",
-                                                "/api/actuator/**",
-                                                "/internal/**")
+                                auth.requestMatchers("/auth/**", "/api/actuator/**", "/internal/**")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())

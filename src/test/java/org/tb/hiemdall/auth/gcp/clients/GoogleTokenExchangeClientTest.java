@@ -54,16 +54,25 @@ class GoogleTokenExchangeClientTest {
     void exchangeCodePostsFormAndParsesTokens() {
         server.expect(requestTo(TOKEN_URI))
                 .andExpect(method(HttpMethod.POST))
-                .andExpect(header("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8"))
+                .andExpect(
+                        header("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8"))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("code=auth-code")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("client_id=client-abc")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("grant_type=authorization_code")))
+                .andExpect(
+                        content()
+                                .string(
+                                        org.hamcrest.Matchers.containsString(
+                                                "client_id=client-abc")))
+                .andExpect(
+                        content()
+                                .string(
+                                        org.hamcrest.Matchers.containsString(
+                                                "grant_type=authorization_code")))
                 .andRespond(
                         withSuccess(
-                                        "{\"access_token\":\"at\",\"refresh_token\":\"rt\","
-                                                + "\"id_token\":\"idt\",\"expires_in\":3600,"
-                                                + "\"scope\":\"openid email\",\"token_type\":\"Bearer\"}",
-                                        MediaType.APPLICATION_JSON));
+                                "{\"access_token\":\"at\",\"refresh_token\":\"rt\","
+                                        + "\"id_token\":\"idt\",\"expires_in\":3600,"
+                                        + "\"scope\":\"openid email\",\"token_type\":\"Bearer\"}",
+                                MediaType.APPLICATION_JSON));
 
         OAuthTokenResponse resp = client.exchangeCode("auth-code");
 
@@ -93,8 +102,7 @@ class GoogleTokenExchangeClientTest {
     @Test
     void throwsWhenIdTokenMissing() {
         server.expect(requestTo(TOKEN_URI))
-                .andRespond(
-                        withSuccess("{\"access_token\":\"at\"}", MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess("{\"access_token\":\"at\"}", MediaType.APPLICATION_JSON));
 
         assertThatThrownBy(() -> client.exchangeCode("code"))
                 .isInstanceOf(GoogleTokenExchangeFailedException.class)
@@ -104,7 +112,8 @@ class GoogleTokenExchangeClientTest {
     @Test
     void wrapsClientErrorAsExchangeFailure() {
         server.expect(requestTo(TOKEN_URI))
-                .andRespond(withStatus(HttpStatus.BAD_REQUEST).body("{\"error\":\"invalid_grant\"}"));
+                .andRespond(
+                        withStatus(HttpStatus.BAD_REQUEST).body("{\"error\":\"invalid_grant\"}"));
 
         assertThatThrownBy(() -> client.exchangeCode("code"))
                 .isInstanceOf(GoogleTokenExchangeFailedException.class)

@@ -17,27 +17,27 @@ class AuthExceptionHandlerTest {
 
     @Test
     void userCancelRedirectsWithAccessDenied() {
-        ResponseEntity<Void> resp = handler.onCancelled(new LoginCancelledException("access_denied"));
+        ResponseEntity<Void> resp =
+                handler.onCancelled(new LoginCancelledException("access_denied"));
         assertRedirect(resp, "access_denied");
     }
 
     @Test
     void providerErrorRedirectsWithProviderCode() {
-        ResponseEntity<Void> resp = handler.onCancelled(new LoginCancelledException("server_error"));
+        ResponseEntity<Void> resp =
+                handler.onCancelled(new LoginCancelledException("server_error"));
         assertRedirect(resp, "server_error");
     }
 
     @Test
     void csrfMismatchRedirectsWithStateInvalid() {
-        ResponseEntity<Void> resp =
-                handler.onUserOrCsrfIssue(new CsrfMismatchException("boom"));
+        ResponseEntity<Void> resp = handler.onUserOrCsrfIssue(new CsrfMismatchException("boom"));
         assertRedirect(resp, "state_invalid");
     }
 
     @Test
     void emailUnverifiedRedirectsWithEmailUnverified() {
-        ResponseEntity<Void> resp =
-                handler.onUserOrCsrfIssue(new EmailUnverifiedException("boom"));
+        ResponseEntity<Void> resp = handler.onUserOrCsrfIssue(new EmailUnverifiedException("boom"));
         assertRedirect(resp, "email_unverified");
     }
 
@@ -58,7 +58,6 @@ class AuthExceptionHandlerTest {
     private static void assertRedirect(ResponseEntity<Void> resp, String errCode) {
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         assertThat(resp.getHeaders().getLocation()).isNotNull();
-        assertThat(resp.getHeaders().getLocation().toString())
-                .isEqualTo("/login?err=" + errCode);
+        assertThat(resp.getHeaders().getLocation().toString()).isEqualTo("/login?err=" + errCode);
     }
 }

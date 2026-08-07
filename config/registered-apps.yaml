@@ -1,0 +1,14 @@
+# External registry of downstream apps allowed to initiate auth through hiemdall.
+#
+# Merged into the Spring property tree via SPRING_CONFIG_IMPORT (see docker-compose.yml).
+# Bound in Java by RegisteredAppsConfig -> Map<String, RegisteredApp>.
+#
+# Keys are the appID clients send on /auth/... calls. `post-auth-redirect` must be a
+# browser-reachable URL (not a Docker service name), since it is where the user's browser
+# lands after Google OAuth completes.
+
+app:
+  registered-apps:
+    kkt:
+      app-name: KharchaKhata
+      post-auth-redirect: http://localhost:8080/dashboard

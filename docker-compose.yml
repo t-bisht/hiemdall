@@ -1,0 +1,37 @@
+# hiemdall — local/dev Compose stack.
+#
+# Config values that vary per host (paths, secrets) come from .env (see .env.example).
+# The registered-apps registry is mounted as an external file and merged into Spring's
+# property tree via SPRING_CONFIG_IMPORT.
+
+services:
+  hiemdall:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hiemdall:${HIEMDALL_IMAGE_TAG:-0.1.0-SNAPSHOT}
+    container_name: hiemdall
+    ports:
+      - "${HIEMDALL_HOST_PORT:-8082}:8082"
+    volumes:
+      # Host file bind-mounted read-only. Container path is the contract; host path is per-env.
+      - ${HIEMDALL_CONFIG_DIR:-./config}/registered-apps.yaml:/config/registered-apps.yaml:ro
+    environment:
+      # Merge the external registry file into Spring config. Drop `optional:` to fail fast
+      # if the file is missing.
+      SPRING_CONFIG_IMPORT: optional:file:/config/registered-apps.yaml
+
+      # Secrets and per-env overrides sourced from .env.
+      GOOGLE_CLIENT_ID:        ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET:    ${GOOGLE_CLIENT_SECRET}
+      APP_OAUTH_REDIRECT_URI:  ${APP_OAUTH_REDIRECT_URI}
+      INTERNAL_SVC_TOKEN:      ${INTERNAL_SVC_TOKEN}
+    networks:
+      - tb-shared
+
+networks:
+  # Shared external network so downstream apps can reach hiemdall's JWKS endpoint at
+  # http://hiemdall:8082/.well-known/jwks.json. Create once with:
+  #   docker network create tb-shared
+  tb-shared:
+    external: true

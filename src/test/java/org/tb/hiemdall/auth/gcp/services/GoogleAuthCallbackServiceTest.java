@@ -73,8 +73,7 @@ class GoogleAuthCallbackServiceTest {
         when(identityResolver.resolve(tokens)).thenReturn(identity);
         when(stateGenerator.generate()).thenReturn("new-csrf");
 
-        AuthCallBackRecord rec =
-                new AuthCallBackRecord(null, "s", "s", "code-123", "/dashboard");
+        AuthCallBackRecord rec = new AuthCallBackRecord(null, "s", "s", "code-123", "/dashboard");
         HiemdallAuthResponseRecord result = service.handleCallback(rec);
 
         assertThat(result.tokens()).isSameAs(tokens);

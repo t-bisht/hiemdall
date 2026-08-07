@@ -6,7 +6,7 @@
 
 FROM eclipse-temurin:21-jre-alpine AS layertools
 WORKDIR /extract
-COPY build/libs/hiemdall-0.1.0-SNAPSHOT.jar app.jar
+COPY build/libs/hiemdall-*.jar app.jar
 RUN java -Djarmode=layertools -jar app.jar extract
 
 FROM eclipse-temurin:21-jre-alpine

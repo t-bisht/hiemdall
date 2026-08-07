@@ -18,16 +18,16 @@ app:
       - profile
       - https://www.googleapis.com/auth/gmail.readonly
 
-  jwt:
-    private-key-path: ${APP_JWT_PRIVATE_KEY_PATH:/Users/obake/codebase/kharchakhata/infra/secrets/jwt-private.pem}
-    active-kid:       ${APP_JWT_ACTIVE_KID:v1}
-    issuer:           ${APP_JWT_ISSUER:auth_engine}
-    expiration-hours: ${APP_JWT_EXPIRATION_HOURS:24}
   internal:
     # Shared secret sent by other services as X-Internal-Auth on /internal/** calls.
     svc-token: ${INTERNAL_SVC_TOKEN:dev-internal-token-change-me}
-  cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
+  # Default registry for local dev. Prod values come from an external file merged in via
+  # SPRING_CONFIG_IMPORT (see docker-compose.yml).
+  registered-apps:
+    kkt:
+      app-name:           KharchaKhata
+      post-auth-redirect: http://localhost:3000/dashboard
 
 management:
   endpoints:

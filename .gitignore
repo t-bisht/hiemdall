@@ -13,7 +13,13 @@ out/
 
 *.log
 
+.env
+.env.local
+.env.*.local
+
 .claude/settings.local.json
 .claude/*.local.*
 .claude
 CLAUDE.md
+
+dont_commit

@@ -91,10 +91,16 @@ class GoogleAuthStartServiceTest {
     }
 
     private static Map<String, String> params(String url) {
-        return UriComponentsBuilder.fromUri(URI.create(url)).build().getQueryParams().entrySet().stream()
+        return UriComponentsBuilder.fromUri(URI.create(url))
+                .build()
+                .getQueryParams()
+                .entrySet()
+                .stream()
                 .collect(
                         Collectors.toMap(
                                 Map.Entry::getKey,
-                                e -> URLDecoder.decode(e.getValue().get(0), StandardCharsets.UTF_8)));
+                                e ->
+                                        URLDecoder.decode(
+                                                e.getValue().get(0), StandardCharsets.UTF_8)));
     }
 }
