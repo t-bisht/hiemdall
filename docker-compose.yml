@@ -6,10 +6,10 @@
 
 services:
   hiemdall:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: hiemdall:${HIEMDALL_IMAGE_TAG:-0.1.0-SNAPSHOT}
+    # Pulled from the registry — publish with ./docker_build.sh --push first.
+    # Override tag per env via HIEMDALL_IMAGE_TAG; `latest` is fine for local dev.
+    image: obake/hiemdall:${HIEMDALL_IMAGE_TAG:-latest}
+    pull_policy: always
     container_name: hiemdall
     ports:
       - "${HIEMDALL_HOST_PORT:-9082}:9082"
@@ -26,12 +26,8 @@ services:
       GOOGLE_CLIENT_SECRET:    ${GOOGLE_CLIENT_SECRET}
       APP_OAUTH_REDIRECT_URI:  ${APP_OAUTH_REDIRECT_URI}
       INTERNAL_SVC_TOKEN:      ${INTERNAL_SVC_TOKEN}
-    networks:
-      - tb-shared
-
-networks:
-  # Shared external network so downstream apps can reach hiemdall's JWKS endpoint at
-  # http://hiemdall:9082/.well-known/jwks.json. Create once with:
-  #   docker network create tb-shared
-  tb-shared:
-    external: true
+# When downstream services (STASH user_engine, etc.) join this stack, add:
+#   networks: [tb-shared]  on the service and
+#   networks: { tb-shared: { external: true } }  at the file bottom,
+# then `docker network create tb-shared` once on the host.
+# Standalone compose uses the default bridge network created automatically.
