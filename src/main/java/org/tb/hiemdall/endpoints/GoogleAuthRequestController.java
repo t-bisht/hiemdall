@@ -18,7 +18,6 @@ public class GoogleAuthRequestController {
 
     @GetMapping("/start")
     public ResponseEntity<Map<String, String>> startGoogleLogin(
-            @RequestParam(name = "redirect", required = false) String redirect,
             @RequestParam(name = "app", required = true) String appID) {
 
         return gauthService.startGoogleAuthService(appID);
@@ -31,9 +30,7 @@ public class GoogleAuthRequestController {
             @RequestParam(name = "error", required = false) String error,
             @CookieValue(name = STATE_COOKIE, required = false) String stateCookie,
             @CookieValue(name = POST_LOGIN_COOKIE, required = false) String postLoginCookie) {
-        ResponseEntity reponse =
-                gauthService.handleAuthCallback(
-                        new AuthCallBackRecord(error, state, stateCookie, code, postLoginCookie));
-        return reponse;
+        return gauthService.handleAuthCallback(
+                new AuthCallBackRecord(error, state, stateCookie, code, postLoginCookie));
     }
 }

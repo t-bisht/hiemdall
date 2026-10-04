@@ -15,16 +15,31 @@ app:
     client-secret: ${GOOGLE_CLIENT_SECRET:}
     auth-uri: https://accounts.google.com/o/oauth2/v2/auth
     token-uri: https://oauth2.googleapis.com/token
-    redirect-uri: ${APP_OAUTH_REDIRECT_URI:http://localhost:3000/api/auth/google/callback}
+    # Must be byte-identical to an Authorized redirect URI registered on the GCP OAuth client.
+    # Hiemdall's own callback — port 9082 locally, 7081 in compose (override via env).
+    redirect-uri: ${APP_OAUTH_REDIRECT_URI:http://localhost:9082/auth/google/callback}
     scopes:
       - openid
       - email
       - profile
       - https://www.googleapis.com/auth/gmail.readonly
+    # Pair required for Google to return `refresh_token` on every authorize call.
+    # Overridable per environment; omit → defaults in GoogleOAuthProperties kick in.
+    access-type: offline
+    prompt: consent
 
   internal:
     # Shared secret sent by other services as X-Internal-Auth on /internal/** calls.
     svc-token: ${INTERNAL_SVC_TOKEN:dev-internal-token-change-me}
+
+  handoff:
+    # TTL must cover the browser 302 + SPA → user_engine round-trip. 60s is comfortable headroom
+    # for the single hop over localhost; tighten before prod. ISO-8601 so @Scheduled accepts it.
+    ttl: PT60S
+    # Hard cap on concurrent parked bundles. ~1 KB each → 10k is well under 10 MB.
+    max-entries: 10000
+    # Background sweeper cadence. Store also sweeps opportunistically on `put` when full.
+    sweep-every: PT10S
 
 
 management:

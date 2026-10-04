@@ -31,7 +31,7 @@ public class GoogleAuthStartService {
         try {
             String postAuthRedirectURL = appRegister.get(appID).postAuthRedirect();
             String csrfToken = stateGenerator.generate();
-            String authUrl = buildGoogleAuthURL(csrfToken, /* forceConsent= */ true);
+            String authUrl = buildGoogleAuthURL(csrfToken);
             return new InitAuthRecord(csrfToken, authUrl, postAuthRedirectURL);
         } catch (Exception e) {
             log.error("auth init failed for appID '{}': {}", appID, e.getMessage(), e);
@@ -40,19 +40,18 @@ public class GoogleAuthStartService {
         }
     }
 
-    public String buildGoogleAuthURL(String csrfToken, boolean forceConsent) {
-        UriComponentsBuilder b =
-                UriComponentsBuilder.fromUriString(props.authUri())
-                        .queryParam("client_id", props.clientId())
-                        .queryParam("redirect_uri", props.redirectUri())
-                        .queryParam("response_type", "code")
-                        .queryParam("scope", String.join(" ", props.scopes()))
-                        .queryParam("state", csrfToken)
-                        .queryParam("access_type", "offline")
-                        .queryParam("include_granted_scopes", "true");
-        if (forceConsent) {
-            b.queryParam("prompt", "consent");
-        }
-        return b.encode().build().toUriString();
+    public String buildGoogleAuthURL(String csrfToken) {
+        return UriComponentsBuilder.fromUriString(props.authUri())
+                .queryParam("client_id", props.clientId())
+                .queryParam("redirect_uri", props.redirectUri())
+                .queryParam("response_type", "code")
+                .queryParam("scope", String.join(" ", props.scopes()))
+                .queryParam("state", csrfToken)
+                .queryParam("access_type", props.accessType())
+                .queryParam("prompt", props.prompt())
+                .queryParam("include_granted_scopes", "true")
+                .encode()
+                .build()
+                .toUriString();
     }
 }

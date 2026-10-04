@@ -21,18 +21,15 @@ public class GoogleAuthCallbackService {
 
     private static final Logger log = LoggerFactory.getLogger(GoogleAuthCallbackService.class);
 
-    @Autowired
-    GoogleTokenExchangeClient googleClient;
+    @Autowired GoogleTokenExchangeClient googleClient;
 
     @Autowired
     @Qualifier("googleOIDC")
     IdentityResolver identityResolver;
 
-    @Autowired
-    OAuthStateGenerator stateGenerator;
+    @Autowired OAuthStateGenerator stateGenerator;
 
-    @Autowired
-    CookieCreator cookieCreator;
+    @Autowired CookieCreator cookieCreator;
 
     public HiemdallAuthResponseRecord handleCallback(AuthCallBackRecord callbackRecord) {
 

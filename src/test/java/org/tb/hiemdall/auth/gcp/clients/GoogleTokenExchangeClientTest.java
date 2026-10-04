@@ -34,7 +34,9 @@ class GoogleTokenExchangeClientTest {
                     "https://accounts.google.com/o/oauth2/v2/auth",
                     TOKEN_URI,
                     "http://localhost:3000/callback",
-                    List.of("openid", "email"));
+                    List.of("openid", "email"),
+                    "offline",
+                    "consent");
 
     private GoogleTokenExchangeClient client;
     private MockRestServiceServer server;

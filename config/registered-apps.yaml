@@ -11,4 +11,5 @@ app:
   registered-apps:
     stash:
       app-name: stash
-      post-auth-redirect: http://localhost:8080/dashboard
+      # Vite dev server for Phase 1 local verification. Compose profile overrides this.
+      post-auth-redirect: http://localhost:5173/auth/return

@@ -15,6 +15,6 @@ public class IdTokenMalformedException extends AuthFlowException {
 
     @Override
     public String errorCode() {
-        return "code_exchange_failed";
+        return "token_exchange_failed";
     }
 }

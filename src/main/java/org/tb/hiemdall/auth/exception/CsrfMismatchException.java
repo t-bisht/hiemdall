@@ -14,6 +14,6 @@ public class CsrfMismatchException extends AuthFlowException {
 
     @Override
     public String errorCode() {
-        return "state_invalid";
+        return "csrf_mismatch";
     }
 }

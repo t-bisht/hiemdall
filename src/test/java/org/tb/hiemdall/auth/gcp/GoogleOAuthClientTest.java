@@ -32,7 +32,9 @@ class GoogleOAuthClientTest {
                     "https://accounts.google.com/o/oauth2/v2/auth",
                     TOKEN_URI,
                     "http://localhost:3000/callback",
-                    List.of("openid", "email"));
+                    List.of("openid", "email"),
+                    "offline",
+                    "consent");
 
     private GoogleOAuthClient client;
     private MockRestServiceServer server;

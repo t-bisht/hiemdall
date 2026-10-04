@@ -33,7 +33,9 @@ class GoogleAuthStartServiceTest {
                     "https://accounts.google.com/o/oauth2/v2/auth",
                     "https://oauth2.googleapis.com/token",
                     "http://localhost:3000/api/auth/google/callback",
-                    List.of("openid", "email", "profile"));
+                    List.of("openid", "email", "profile"),
+                    "offline",
+                    "consent");
 
     @Mock OAuthStateGenerator stateGenerator;
 
@@ -52,7 +54,7 @@ class GoogleAuthStartServiceTest {
 
     @Test
     void buildsUrlWithAllRequiredOauthParams() {
-        String url = service.buildGoogleAuthURL("state-xyz", true);
+        String url = service.buildGoogleAuthURL("state-xyz");
         Map<String, String> params = params(url);
 
         assertThat(url).startsWith("https://accounts.google.com/o/oauth2/v2/auth?");
@@ -63,14 +65,27 @@ class GoogleAuthStartServiceTest {
                 .containsEntry("scope", "openid email profile")
                 .containsEntry("state", "state-xyz")
                 .containsEntry("access_type", "offline")
-                .containsEntry("include_granted_scopes", "true")
-                .containsEntry("prompt", "consent");
+                .containsEntry("prompt", "consent")
+                .containsEntry("include_granted_scopes", "true");
     }
 
     @Test
-    void omitsPromptWhenNotForcingConsent() {
-        String url = service.buildGoogleAuthURL("s", false);
-        assertThat(params(url)).doesNotContainKey("prompt");
+    void propsControlAccessTypeAndPromptValues() {
+        GoogleOAuthProperties custom =
+                new GoogleOAuthProperties(
+                        "cid",
+                        "sec",
+                        "https://accounts.google.com/o/oauth2/v2/auth",
+                        "https://oauth2.googleapis.com/token",
+                        "http://localhost/cb",
+                        List.of("openid"),
+                        "online",
+                        "none");
+        GoogleAuthStartService svc = new GoogleAuthStartService();
+        ReflectionTestUtils.setField(svc, "props", custom);
+
+        Map<String, String> p = params(svc.buildGoogleAuthURL("s"));
+        assertThat(p).containsEntry("access_type", "online").containsEntry("prompt", "none");
     }
 
     @Test
