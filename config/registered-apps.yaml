@@ -9,6 +9,6 @@
 
 app:
   registered-apps:
-    kkt:
-      app-name: KharchaKhata
+    stash:
+      app-name: stash
       post-auth-redirect: http://localhost:8080/dashboard

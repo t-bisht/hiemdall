@@ -27,4 +27,30 @@ public record OAuthTokenResponse(
         @JsonProperty("id_token") String idToken,
         @JsonProperty("expires_in") Long expiresIn,
         @JsonProperty("scope") String scope,
-        @JsonProperty("token_type") String tokenType) {}
+        @JsonProperty("token_type") String tokenType) {
+
+    @Override
+    public String toString() {
+        return "OAuthTokenResponse{"
+                + "accessToken="
+                + mask(accessToken)
+                + ", refreshToken="
+                + mask(refreshToken)
+                + ", idToken="
+                + mask(idToken)
+                + ", expiresIn="
+                + expiresIn
+                + ", scope="
+                + scope
+                + ", tokenType="
+                + tokenType
+                + '}';
+    }
+
+    private static String mask(String token) {
+        if (token == null) return "null";
+        if (token.isEmpty()) return "<empty>";
+        if (token.length() <= 8) return "****";
+        return token.substring(0, 4) + "****" + token.substring(token.length() - 4);
+    }
+}

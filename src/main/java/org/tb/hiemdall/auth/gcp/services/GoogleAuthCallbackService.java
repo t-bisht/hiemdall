@@ -21,15 +21,18 @@ public class GoogleAuthCallbackService {
 
     private static final Logger log = LoggerFactory.getLogger(GoogleAuthCallbackService.class);
 
-    @Autowired GoogleTokenExchangeClient googleClient;
+    @Autowired
+    GoogleTokenExchangeClient googleClient;
 
     @Autowired
     @Qualifier("googleOIDC")
     IdentityResolver identityResolver;
 
-    @Autowired OAuthStateGenerator stateGenerator;
+    @Autowired
+    OAuthStateGenerator stateGenerator;
 
-    @Autowired CookieCreator cookieCreator;
+    @Autowired
+    CookieCreator cookieCreator;
 
     public HiemdallAuthResponseRecord handleCallback(AuthCallBackRecord callbackRecord) {
 
@@ -37,7 +40,7 @@ public class GoogleAuthCallbackService {
         String state = callbackRecord.state();
         String stateCookie = callbackRecord.stateCookie();
         String code = callbackRecord.code();
-        String postLoginCookie = callbackRecord.postLoginCookie();
+        String redirectURL = callbackRecord.postLoginCookie();
 
         // rely on error to fail fast
         if (error != null && !error.isBlank()) {
@@ -58,6 +61,6 @@ public class GoogleAuthCallbackService {
 
         String csrfToken = stateGenerator.generate();
 
-        return new HiemdallAuthResponseRecord(tokens, identity, csrfToken, postLoginCookie);
+        return new HiemdallAuthResponseRecord(tokens, identity, csrfToken, redirectURL);
     }
 }

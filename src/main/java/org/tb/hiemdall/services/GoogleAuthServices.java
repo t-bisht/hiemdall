@@ -16,9 +16,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.tb.hiemdall.auth.HiemdallAuthOrchestrator;
-import org.tb.hiemdall.auth.records.AuthCallBackRecord;
-import org.tb.hiemdall.auth.records.HiemdallAuthResponseRecord;
-import org.tb.hiemdall.auth.records.InitAuthRecord;
+import org.tb.hiemdall.auth.records.*;
 import org.tb.hiemdall.auth.utilities.CookieCreator;
 import org.tb.hiemdall.spring.RegisteredAppsConfig.RegisteredApp;
 
@@ -71,6 +69,9 @@ public class GoogleAuthServices {
                 authOrchestrator.handleAuthCallBack(callbackEntities);
 
         String redirectPath = responseRecord.redirectPath();
+        OAuthTokenResponse oAuthTokens = responseRecord.tokens();
+        IdentityClaims idClaims = responseRecord.identity();
+        String csrfCookie = responseRecord.csrfToken();
 
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(redirectPath))

@@ -1,17 +1,21 @@
 server:
-  port: 8082
+  port: 9082
 
 spring:
   application:
     name: hiemdall
+  # Load external registered-apps file if present. Relative to CWD (project root for bootRun / IntelliJ).
+  # In Docker, SPRING_CONFIG_IMPORT env var overrides this with /config/registered-apps.yaml.
+  config:
+    import: optional:file:./config/registered-apps.yaml
 
 app:
   google:
-    client-id:     ${GOOGLE_CLIENT_ID:}
+    client-id: ${GOOGLE_CLIENT_ID:}
     client-secret: ${GOOGLE_CLIENT_SECRET:}
-    auth-uri:      https://accounts.google.com/o/oauth2/v2/auth
-    token-uri:     https://oauth2.googleapis.com/token
-    redirect-uri:  ${APP_OAUTH_REDIRECT_URI:http://localhost:3000/api/auth/google/callback}
+    auth-uri: https://accounts.google.com/o/oauth2/v2/auth
+    token-uri: https://oauth2.googleapis.com/token
+    redirect-uri: ${APP_OAUTH_REDIRECT_URI:http://localhost:3000/api/auth/google/callback}
     scopes:
       - openid
       - email
@@ -22,12 +26,6 @@ app:
     # Shared secret sent by other services as X-Internal-Auth on /internal/** calls.
     svc-token: ${INTERNAL_SVC_TOKEN:dev-internal-token-change-me}
 
-  # Default registry for local dev. Prod values come from an external file merged in via
-  # SPRING_CONFIG_IMPORT (see docker-compose.yml).
-  registered-apps:
-    kkt:
-      app-name:           KharchaKhata
-      post-auth-redirect: http://localhost:3000/dashboard
 
 management:
   endpoints:
