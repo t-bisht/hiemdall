@@ -22,10 +22,10 @@ services:
       SPRING_CONFIG_IMPORT: optional:file:/config/registered-apps.yaml
 
       # Secrets and per-env overrides sourced from .env.
-      GOOGLE_CLIENT_ID:        ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET:    ${GOOGLE_CLIENT_SECRET}
-      APP_OAUTH_REDIRECT_URI:  ${APP_OAUTH_REDIRECT_URI}
-      INTERNAL_SVC_TOKEN:      ${INTERNAL_SVC_TOKEN}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      APP_OAUTH_REDIRECT_URI: ${APP_OAUTH_REDIRECT_URI}
+      INTERNAL_SVC_TOKEN: ${INTERNAL_SVC_TOKEN}
 # When downstream services (STASH user_engine, etc.) join this stack, add:
 #   networks: [tb-shared]  on the service and
 #   networks: { tb-shared: { external: true } }  at the file bottom,

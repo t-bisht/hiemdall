@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.tb.hiemdall.auth.handoff.ExchangeResponse;
 import org.tb.hiemdall.auth.handoff.HandoffEntry;
 import org.tb.hiemdall.auth.handoff.HandoffExchangeRequest;
 import org.tb.hiemdall.auth.handoff.HandoffStore;
-import org.tb.hiemdall.auth.records.OAuthTokenResponse;
 
 /**
  * Back-channel endpoint apps use to redeem a browser-side handoff code for the actual Google token
@@ -32,7 +32,7 @@ public class InternalHandoffController {
     @Autowired HandoffStore handoffStore;
 
     @PostMapping("/exchange")
-    public ResponseEntity<OAuthTokenResponse> exchange(@RequestBody HandoffExchangeRequest body) {
+    public ResponseEntity<ExchangeResponse> exchange(@RequestBody HandoffExchangeRequest body) {
         if (body == null
                 || body.app() == null
                 || body.app().isBlank()
@@ -46,6 +46,6 @@ public class InternalHandoffController {
             log.info("handoff exchange miss for app '{}'", body.app());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return ResponseEntity.ok(entry.tokens());
+        return ResponseEntity.ok(new ExchangeResponse(entry.tokens(), entry.identity()));
     }
 }

@@ -59,9 +59,12 @@ class InternalHandoffControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"app\":\"stash\",\"handoff\":\"code-123\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.access_token").value("at"))
-                .andExpect(jsonPath("$.refresh_token").value("rt"))
-                .andExpect(jsonPath("$.id_token").value("idt"));
+                .andExpect(jsonPath("$.tokens.access_token").value("at"))
+                .andExpect(jsonPath("$.tokens.refresh_token").value("rt"))
+                .andExpect(jsonPath("$.tokens.id_token").value("idt"))
+                .andExpect(jsonPath("$.identity.sub").value("sub"))
+                .andExpect(jsonPath("$.identity.email").value("u@e.com"))
+                .andExpect(jsonPath("$.identity.name").value("U"));
     }
 
     @Test
