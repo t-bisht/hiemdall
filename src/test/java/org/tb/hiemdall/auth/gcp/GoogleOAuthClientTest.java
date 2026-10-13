@@ -89,6 +89,20 @@ class GoogleOAuthClientTest {
     }
 
     @Test
+    void clientErrorDoesNotChainBodyBearingCause() {
+        server.expect(requestTo(TOKEN_URI))
+                .andRespond(
+                        withStatus(HttpStatus.BAD_REQUEST)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body("{\"error\":\"invalid_client\"}"));
+
+        assertThatThrownBy(() -> client.refresh("t"))
+                .isInstanceOf(UpstreamUnavailableException.class)
+                .hasNoCause()
+                .hasMessageNotContaining("invalid_client");
+    }
+
+    @Test
     void serverErrorMapsToUpstream() {
         server.expect(requestTo(TOKEN_URI)).andRespond(withServerError());
 
@@ -96,10 +110,6 @@ class GoogleOAuthClientTest {
                 .isInstanceOf(UpstreamUnavailableException.class);
     }
 
-    // NOTE: refresh()'s `catch (Exception e)` swallows the domain exception it
-    // threw internally and rewraps with "Google /token unreachable". Cause carries
-    // the original "missing access_token" message. Assertions reflect this — fix
-    // in source by narrowing the outer catch.
     @Test
     void missingAccessTokenMapsToUpstream() {
         server.expect(requestTo(TOKEN_URI))
@@ -107,7 +117,6 @@ class GoogleOAuthClientTest {
 
         assertThatThrownBy(() -> client.refresh("t"))
                 .isInstanceOf(UpstreamUnavailableException.class)
-                .hasRootCauseInstanceOf(UpstreamUnavailableException.class)
-                .hasStackTraceContaining("missing access_token");
+                .hasMessageContaining("missing access_token");
     }
 }
