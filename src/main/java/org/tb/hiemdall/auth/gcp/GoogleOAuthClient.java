@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.tb.hiemdall.auth.exception.GoogleAuthRevokedException;
 import org.tb.hiemdall.auth.exception.UpstreamUnavailableException;
@@ -14,12 +15,9 @@ import org.tb.hiemdall.auth.gcp.configs.GoogleOAuthProperties;
 import org.tb.hiemdall.auth.records.OAuthTokenResponse;
 
 /**
- * HTTP client for Google's OAuth token endpoint. Handles both:
- *
- * <ul>
- *   <li>{@link #exchangeCode(String)} — initial code-for-tokens exchange (spec §4.2)
- *   <li>{@link #refresh(String)} — swap refresh_token for a new access_token (spec §4.7)
- * </ul>
+ * HTTP client for Google's OAuth token endpoint. Handles {@link #refresh(String)} — swap a
+ * refresh_token for a new access_token. The initial code-for-tokens exchange lives in {@link
+ * org.tb.hiemdall.auth.gcp.clients.GoogleTokenExchangeClient}.
  *
  * <p>Uses Spring's {@link RestClient} (synchronous, Spring 6.1+). Timeouts and retries rely on
  * defaults for now — tune when we see real Google flakiness.
@@ -76,15 +74,11 @@ public class GoogleOAuthClient {
             if (e.getStatusCode().value() == 400 && responseBody.contains("invalid_grant")) {
                 throw new GoogleAuthRevokedException("Google returned invalid_grant on refresh");
             }
-            log.warn(
-                    "Google /token refresh failed: status={}, body={}",
-                    e.getStatusCode(),
-                    responseBody);
+            log.warn("Google /token refresh failed: status={}", e.getStatusCode());
+            // Cause deliberately not chained: the exception's message embeds Google's raw body.
             throw new UpstreamUnavailableException(
-                    "Google /token refresh returned " + e.getStatusCode(), e);
-        } catch (GoogleAuthRevokedException e) {
-            throw e;
-        } catch (Exception e) {
+                    "Google /token refresh returned " + e.getStatusCode(), null);
+        } catch (RestClientException e) {
             log.warn("Google /token refresh failed: {}", e.getMessage());
             throw new UpstreamUnavailableException("Google /token unreachable", e);
         }

@@ -82,6 +82,7 @@ Browser                  Hiemdall                      Google                 Ap
 | `GET`  | `/auth/google/start?app={appId}`  | Public                   | Initiate Google OAuth. Sets `csrf_state` + `post_login` cookies, 302s to Google. |
 | `GET`  | `/auth/google/callback`           | Public (CSRF via cookie) | Google redirects here. Verifies state, exchanges code, parks tokens, 302s to the app with `?handoff=<code>`. |
 | `POST` | `/internal/auth/exchange`         | `X-Internal-Auth` header | App backend redeems a handoff code for the Google token bundle. Atomic single-use. |
+| `POST` | `/internal/auth/google/refresh`   | `X-Internal-Auth` header | App backend swaps its stored Google `refresh_token` for a fresh `access_token`. Stateless proxy. |
 | `GET`  | `/api/actuator/health`            | Public                   | Health check.                                                       |
 
 ### Security boundaries
@@ -280,9 +281,11 @@ src/main/java/org/tb/hiemdall/
 ├── HiemdallApplication.java                 # Spring Boot entry point
 ├── endpoints/
 │   ├── GoogleAuthRequestController.java     # /auth/google/{start,callback}
-│   └── InternalHandoffController.java       # /internal/auth/exchange
+│   ├── InternalHandoffController.java       # /internal/auth/exchange
+│   └── GoogleTokenRefreshController.java    # /internal/auth/google/refresh
 ├── services/
-│   └── GoogleAuthServices.java              # Cookies, redirects, handoff put/consume glue
+│   ├── GoogleAuthServices.java              # Cookies, redirects, handoff put/consume glue
+│   └── GoogleTokenRefreshService.java       # refresh_token → access_token, error contract
 ├── auth/
 │   ├── HiemdallAuthOrchestrator.java        # Interface: initiate + callback
 │   ├── records/                             # DTOs (InitAuthRecord, AuthCallBackRecord,
@@ -298,6 +301,9 @@ src/main/java/org/tb/hiemdall/
 │   │   ├── HandoffProperties.java           # ttl / max-entries / sweep-every
 │   │   ├── HandoffExchangeRequest.java      # /internal/auth/exchange body
 │   │   └── HandoffStoreFullException.java   # → 503
+│   ├── refresh/
+│   │   ├── TokenRefreshRequest.java         # /internal/auth/google/refresh body
+│   │   └── RefreshErrorCode.java            # Stable error codes for refresh
 │   ├── utilities/                           # CSRF state generator, cookie helpers
 │   ├── exception/                           # AuthFlowException hierarchy
 │   └── gcp/
